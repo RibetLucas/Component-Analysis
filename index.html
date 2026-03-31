@@ -45,6 +45,18 @@
             opacity: 0.9;
         }
 
+        .permission-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 15px 20px;
+            background: #f4f6fb;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
         .tabs {
             display: flex;
             background: #f5f5f5;
@@ -123,12 +135,20 @@
             margin-bottom: 40px;
         }
 
-        .details-section h2 {
+        .details-section h2,
+        .details-section h3 {
             color: #667eea;
             margin-bottom: 20px;
             font-size: 1.5em;
             border-bottom: 2px solid #f0f0f0;
             padding-bottom: 10px;
+        }
+
+        .details-section h3 {
+            font-size: 1.2em;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-top: 16px;
         }
 
         table {
@@ -299,6 +319,21 @@
             color: #999;
             font-style: italic;
         }
+
+        .info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #555;
+            background: #eef2ff;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.9em;
+        }
+
+        .info-badge i {
+            font-style: normal;
+        }
     </style>
 </head>
 <body>
@@ -308,10 +343,16 @@
             <p>Analyse complète de votre matériel informatique</p>
         </div>
 
+        <div class="permission-panel">
+            <span id="permission-status" class="info-badge"><i>⚠️</i> Autorisation non demandée</span>
+            <button class="btn btn-secondary" onclick="requestSystemPermission()">Autoriser l'accès système</button>
+            <button class="btn btn-secondary" onclick="downloadReport()">Télécharger rapport</button>
+        </div>
+
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('summary')">📊 Résumé</button>
-            <button class="tab-btn" onclick="switchTab('details')">🔧 Détails</button>
-            <button class="tab-btn" onclick="switchTab('monitoring')">📈 Surveillance</button>
+            <button class="tab-btn active" onclick="switchTab(event, 'summary')">📊 Résumé</button>
+            <button class="tab-btn" onclick="switchTab(event, 'details')">🔧 Détails</button>
+            <button class="tab-btn" onclick="switchTab(event, 'monitoring')">📈 Surveillance</button>
         </div>
 
         <div class="content">
@@ -330,6 +371,10 @@
                     <div class="summary-card">
                         <h3>Processeur</h3>
                         <p id="summary-cpu">N/A</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Carte graphique</h3>
+                        <p id="summary-gpu">N/A</p>
                     </div>
                     <div class="summary-card">
                         <h3>Mémoire RAM</h3>
@@ -364,11 +409,12 @@
                 <!-- SYSTÈME -->
                 <div class="details-section">
                     <h2>🖥️ Informations Système</h2>
-                    <table>
+                    <input class="filter-input" id="system-filter" placeholder="Filtrer..." oninput="filterTable('system-table', this.value)">
+                    <table id="system-table-wrap">
                         <thead>
                             <tr>
-                                <th>Propriété</th>
-                                <th>Valeur</th>
+                                <th onclick="sortTable('system-table', 0, 'text')">Propriété</th>
+                                <th onclick="sortTable('system-table', 1, 'text')">Valeur</th>
                             </tr>
                         </thead>
                         <tbody id="system-table">
@@ -380,11 +426,12 @@
                 <!-- CPU -->
                 <div class="details-section">
                     <h2>⚙️ Processeur (CPU)</h2>
-                    <table>
+                    <input class="filter-input" placeholder="Filtrer..." oninput="filterTable('cpu-table', this.value)">
+                    <table id="cpu-table-wrap">
                         <thead>
                             <tr>
-                                <th>Propriété</th>
-                                <th>Valeur</th>
+                                <th onclick="sortTable('cpu-table', 0, 'text')">Propriété</th>
+                                <th onclick="sortTable('cpu-table', 1, 'text')">Valeur</th>
                             </tr>
                         </thead>
                         <tbody id="cpu-table">
@@ -396,11 +443,12 @@
                 <!-- RAM -->
                 <div class="details-section">
                     <h2>🧠 Mémoire (RAM)</h2>
-                    <table>
+                    <input class="filter-input" placeholder="Filtrer..." oninput="filterTable('ram-table', this.value)">
+                    <table id="ram-table-wrap">
                         <thead>
                             <tr>
-                                <th>Propriété</th>
-                                <th>Valeur</th>
+                                <th onclick="sortTable('ram-table', 0, 'text')">Propriété</th>
+                                <th onclick="sortTable('ram-table', 1, 'text')">Valeur</th>
                             </tr>
                         </thead>
                         <tbody id="ram-table">
@@ -412,14 +460,15 @@
                 <!-- STOCKAGE -->
                 <div class="details-section">
                     <h2>💾 Stockage</h2>
-                    <table>
+                    <input class="filter-input" placeholder="Filtrer..." oninput="filterTable('storage-table', this.value)">
+                    <table id="storage-table-wrap">
                         <thead>
                             <tr>
-                                <th>Type</th>
-                                <th>Capacité</th>
-                                <th>Utilisé</th>
-                                <th>Libre</th>
-                                <th>Pourcentage</th>
+                                <th onclick="sortTable('storage-table', 0, 'text')">Type</th>
+                                <th onclick="sortTable('storage-table', 1, 'text')">Capacité</th>
+                                <th onclick="sortTable('storage-table', 2, 'text')">Utilisé</th>
+                                <th onclick="sortTable('storage-table', 3, 'text')">Libre</th>
+                                <th onclick="sortTable('storage-table', 4, 'number')">% utilisé</th>
                             </tr>
                         </thead>
                         <tbody id="storage-table">
@@ -431,17 +480,19 @@
                 <!-- RÉSEAU -->
                 <div class="details-section">
                     <h2>🌐 Réseau</h2>
-                    <table>
+                    <input class="filter-input" placeholder="Filtrer..." oninput="filterTable('network-table', this.value)">
+                    <table id="network-table-wrap">
                         <thead>
                             <tr>
-                                <th>Interface</th>
-                                <th>Adresse IPv4</th>
-                                <th>Adresse MAC</th>
-                                <th>État</th>
+                                <th onclick="sortTable('network-table', 0, 'text')">Interface</th>
+                                <th onclick="sortTable('network-table', 1, 'text')">Adresse IPv4</th>
+                                <th onclick="sortTable('network-table', 2, 'text')">Adresse MAC</th>
+                                <th onclick="sortTable('network-table', 3, 'text')">État</th>
+                                <th onclick="sortTable('network-table', 4, 'text')">Vitesse</th>
                             </tr>
                         </thead>
                         <tbody id="network-table">
-                            <tr><td colspan="4" class="na">Informations non disponibles</td></tr>
+                            <tr><td colspan="5" class="na">Informations non disponibles</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -449,15 +500,35 @@
                 <!-- GPU -->
                 <div class="details-section">
                     <h2>🎮 Carte Graphique (GPU)</h2>
-                    <table>
+                    <input class="filter-input" placeholder="Filtrer..." oninput="filterTable('gpu-table', this.value)">
+                    <table id="gpu-table-wrap">
                         <thead>
                             <tr>
-                                <th>Propriété</th>
-                                <th>Valeur</th>
+                                <th onclick="sortTable('gpu-table', 0, 'text')">Propriété</th>
+                                <th onclick="sortTable('gpu-table', 1, 'text')">Valeur</th>
                             </tr>
                         </thead>
                         <tbody id="gpu-table">
                             <tr><td colspan="2" class="na">Informations non disponibles</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PÉRIPHÉRIQUES EXTERNES -->
+                <div class="details-section">
+                    <h2>🖱️ Périphériques externes</h2>
+                    <input class="filter-input" placeholder="Filtrer..." oninput="filterTable('external-table', this.value)">
+                    <table id="external-table-wrap">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('external-table', 0, 'text')">Type</th>
+                                <th onclick="sortTable('external-table', 1, 'text')">Modèle</th>
+                                <th onclick="sortTable('external-table', 2, 'text')">Etat</th>
+                                <th onclick="sortTable('external-table', 3, 'text')">Connecté</th>
+                            </tr>
+                        </thead>
+                        <tbody id="external-table">
+                            <tr><td colspan="4" class="na">Aucune donnée détectée</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -466,7 +537,6 @@
             <!-- TAB SURVEILLANCE -->
             <div id="monitoring" class="tab-content">
                 <h2>📈 Surveillance en Temps Réel</h2>
-                
                 <div class="details-section">
                     <h3>Utilisation CPU</h3>
                     <div class="chart-container">
@@ -482,78 +552,160 @@
                 </div>
 
                 <div class="details-section">
-                    <h3>Distribution Ressources</h3>
+                    <h3>Distribution des ressources</h3>
                     <div class="chart-container" style="height: 300px;">
                         <canvas id="resourceChart"></canvas>
                     </div>
+                </div>
+
+                <div class="details-section">
+                    <h3>Température (simulée)</h3>
+                    <div class="gauge"><div class="gauge-bar" id="temp-gauge" style="width: 20%">20°C</div></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // État global
         const state = {
+            permission: 'unknown',
             systemInfo: {},
+            metrics: {
+                cpu: 0,
+                ram: 0,
+                gpuTemp: 0,
+                storageUsage: 0
+            },
             history: {
                 cpu: [],
-                ram: []
+                ram: [],
+                temp: []
             },
             charts: {}
         };
 
-        // Initialisation
         document.addEventListener('DOMContentLoaded', async () => {
             await detectSystemInfo();
             populateDetailsTab();
             initializeCharts();
             startMonitoring();
+            tryAutoRequestPermission();
         });
 
-        // Détection des informations système
+        function tryAutoRequestPermission() {
+            if (navigator.permissions) {
+                navigator.permissions.query({ name: 'geolocation' }).then(result => {
+                    if (result.state === 'granted') {
+                        state.permission = 'granted';
+                        updatePermissionBadge();
+                    } else if (result.state === 'prompt') {
+                        state.permission = 'prompt';
+                        updatePermissionBadge();
+                    } else {
+                        state.permission = 'denied';
+                        updatePermissionBadge();
+                    }
+                }).catch(() => {
+                    state.permission = 'unsupported';
+                    updatePermissionBadge();
+                });
+            } else {
+                state.permission = 'unsupported';
+                updatePermissionBadge();
+            }
+        }
+
+        function requestSystemPermission() {
+            if (!navigator.geolocation) {
+                state.permission = 'unsupported';
+                updatePermissionBadge('Géolocation non supportée. Requête accès impossible.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    state.permission = 'granted';
+                    updatePermissionBadge('Permission accordée pour géolocalisation (démonstration).');
+                    updateSystemInfo({ location: `${position.coords.latitude}, ${position.coords.longitude}` });
+                },
+                error => {
+                    state.permission = 'denied';
+                    updatePermissionBadge('Permission refusée ou indisponible (démonstration).');
+                }
+            );
+        }
+
+        function updatePermissionBadge(message) {
+            const badge = document.getElementById('permission-status');
+            if (!badge) return;
+            if (message) badge.textContent = message;
+            switch (state.permission) {
+                case 'granted':
+                    badge.innerHTML = '<i>✅</i> Autorisation acceptée';
+                    badge.className = 'info-badge status-ok';
+                    break;
+                case 'prompt':
+                    badge.innerHTML = '<i>⚠️</i> Autorisation requise';
+                    badge.className = 'info-badge status-warning';
+                    break;
+                case 'denied':
+                    badge.innerHTML = '<i>❌</i> Autorisation refusée';
+                    badge.className = 'info-badge status-error';
+                    break;
+                default:
+                    badge.innerHTML = '<i>ℹ️</i> Autorisation non disponible';
+                    badge.className = 'info-badge';
+                    break;
+            }
+        }
+
         async function detectSystemInfo() {
             state.systemInfo = {
                 os: getOS(),
                 browser: navigator.userAgent,
-                platform: navigator.platform,
+                platform: navigator.platform || 'N/A',
                 cores: navigator.hardwareConcurrency || 'N/A',
                 ram: estimateRAM(),
-                storage: estimateStorage(),
+                storage: 'N/A',
                 screen: `${window.screen.width}x${window.screen.height}`,
-                language: navigator.language,
+                language: navigator.language || 'N/A',
                 gpu: getGPUInfo(),
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                uptime: 'N/A',
-                hostname: 'N/A'
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A',
+                uptime: getUptime(),
+                hostname: window.location.hostname || 'N/A',
+                chipset: 'N/A',
+                bios: 'N/A',
+                architecture: state.systemInfo ? state.systemInfo.architecture : 'N/A'
             };
 
-            // Mise à jour du résumé
+            const storageEstimate = navigator.storage && navigator.storage.estimate
+                ? await navigator.storage.estimate()
+                : null;
+
+            if (storageEstimate) {
+                const used = (storageEstimate.usage || 0) / (1024 ** 3);
+                const quota = (storageEstimate.quota || 0) / (1024 ** 3);
+                const percent = quota > 0 ? Math.round((used / quota) * 100) : 0;
+                state.systemInfo.storage = `${used.toFixed(2)} GB / ${quota.toFixed(2)} GB`;
+                state.metrics.storageUsage = percent;
+                setTimeout(() => updateStorageDetails({ type: 'SSD', capacity: `${quota.toFixed(2)} GB`, used: `${used.toFixed(2)} GB`, free: `${(quota-used).toFixed(2)} GB`, percent }), 0);
+            } else {
+                state.systemInfo.storage = 'N/A';
+            }
+
             updateSummary();
+            return Promise.resolve();
         }
 
         function getOS() {
             const ua = navigator.userAgent;
-            if (ua.indexOf('Win') > -1) return 'Windows';
-            if (ua.indexOf('Mac') > -1) return 'macOS';
-            if (ua.indexOf('Linux') > -1) return 'Linux';
+            if (/Win/i.test(ua)) return 'Windows';
+            if (/Mac/i.test(ua)) return 'macOS';
+            if (/Linux/i.test(ua)) return 'Linux';
             return 'Système inconnu';
         }
 
         function estimateRAM() {
-            if (navigator.deviceMemory) {
-                return `${navigator.deviceMemory} GB`;
-            }
-            return 'N/A';
-        }
-
-        function estimateStorage() {
-            if (navigator.storage && navigator.storage.estimate) {
-                navigator.storage.estimate().then(estimate => {
-                    const used = (estimate.usage / (1024 ** 3)).toFixed(2);
-                    const quota = (estimate.quota / (1024 ** 3)).toFixed(2);
-                    document.getElementById('summary-storage').textContent = `${used} GB / ${quota} GB`;
-                });
-            }
+            if (navigator.deviceMemory) return `${navigator.deviceMemory} GB`;
             return 'N/A';
         }
 
@@ -565,77 +717,119 @@
             return debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'N/A';
         }
 
+        function getUptime() {
+            if (performance && performance.timing) {
+                const uptime = (Date.now() - performance.timing.navigationStart) / 1000;
+                return `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`;
+            }
+            return 'N/A';
+        }
+
+        function updateSystemInfo(updates) {
+            state.systemInfo = { ...state.systemInfo, ...updates };
+            populateDetailsTab();
+            updateSummary();
+        }
+
         function updateSummary() {
             document.getElementById('summary-os').textContent = state.systemInfo.os;
             document.getElementById('summary-cpu').textContent = `${state.systemInfo.cores} cœurs`;
             document.getElementById('summary-ram').textContent = state.systemInfo.ram;
+            document.getElementById('summary-gpu').textContent = state.systemInfo.gpu;
+            document.getElementById('summary-storage').textContent = state.systemInfo.storage;
         }
 
         function populateDetailsTab() {
-            // Système
             const systemRows = `
-                <tr><td>Système d'exploitation</td><td>${state.systemInfo.os}</td></tr>
-                <tr><td>Plate-forme</td><td>${state.systemInfo.platform}</td></tr>
-                <tr><td>Fuseau horaire</td><td>${state.systemInfo.timezone}</td></tr>
-                <tr><td>Langue</td><td>${state.systemInfo.language}</td></tr>
-                <tr><td>Résolution d'écran</td><td>${state.systemInfo.screen}</td></tr>
-                <tr><td>Navigateur</td><td>${state.systemInfo.browser.substring(0, 50)}...</td></tr>
+                <tr><td>OS</td><td>${state.systemInfo.os || 'N/A'}</td></tr>
+                <tr><td>Version système</td><td>${state.systemInfo.os || 'N/A'}</td></tr>
+                <tr><td>Plate-forme</td><td>${state.systemInfo.platform || 'N/A'}</td></tr>
+                <tr><td>Architecture</td><td>${state.systemInfo.architecture || 'N/A'}</td></tr>
+                <tr><td>Fuseau horaire</td><td>${state.systemInfo.timezone || 'N/A'}</td></tr>
+                <tr><td>Langue</td><td>${state.systemInfo.language || 'N/A'}</td></tr>
+                <tr><td>Résolution</td><td>${state.systemInfo.screen || 'N/A'}</td></tr>
+                <tr><td>Navigateur</td><td>${state.systemInfo.browser.substring(0, 70)}...</td></tr>
+                <tr><td>Uptime</td><td>${state.systemInfo.uptime || 'N/A'}</td></tr>
+                <tr><td>Hostname</td><td>${state.systemInfo.hostname || 'N/A'}</td></tr>
             `;
             document.getElementById('system-table').innerHTML = systemRows;
 
-            // CPU
             const cpuRows = `
-                <tr><td>Nombre de cœurs</td><td>${state.systemInfo.cores}</td></tr>
-                <tr><td>Architecture</td><td>${state.systemInfo.platform}</td></tr>
+                <tr><td>Modèle</td><td>${navigator.platform || 'N/A'}</td></tr>
+                <tr><td>Cœurs</td><td>${state.systemInfo.cores || 'N/A'}</td></tr>
+                <tr><td>Threads</td><td>Non détectable via navigateur</td></tr>
+                <tr><td>Fréquence</td><td>Non détectable via navigateur</td></tr>
+                <tr><td>Cache</td><td>Non détectable via navigateur</td></tr>
                 <tr><td>Utilisation</td><td><span id="cpu-usage">N/A</span></td></tr>
+                <tr><td>Température</td><td id="cpu-temp">N/A</td></tr>
             `;
             document.getElementById('cpu-table').innerHTML = cpuRows;
 
-            // RAM
             const ramRows = `
-                <tr><td>Capacité totale</td><td>${state.systemInfo.ram}</td></tr>
-                <tr><td>Utilisation</td><td><span id="ram-usage">N/A</span></td></tr>
+                <tr><td>Capacité totale</td><td>${state.systemInfo.ram || 'N/A'}</td></tr>
+                <tr><td>Utilisé</td><td id="ram-used">N/A</td></tr>
+                <tr><td>Disponible</td><td id="ram-free">N/A</td></tr>
+                <tr><td>Type</td><td>Non détectable via navigateur</td></tr>
+                <tr><td>Fréquence</td><td>Non détectable via navigateur</td></tr>
+                <tr><td>Utilisation (%)</td><td><span id="ram-usage">N/A</span></td></tr>
             `;
             document.getElementById('ram-table').innerHTML = ramRows;
 
-            // GPU
             const gpuRows = `
-                <tr><td>Modèle</td><td>${state.systemInfo.gpu}</td></tr>
-                <tr><td>Type</td><td>WebGL</td></tr>
+                <tr><td>Modèle</td><td>${state.systemInfo.gpu || 'N/A'}</td></tr>
+                <tr><td>VRAM</td><td>Non détectable via navigateur</td></tr>
+                <tr><td>Fréquence</td><td>Non détectable via navigateur</td></tr>
+                <tr><td>Température</td><td id="gpu-temp">N/A</td></tr>
+                <tr><td>Utilisation</td><td>N/A</td></tr>
             `;
             document.getElementById('gpu-table').innerHTML = gpuRows;
 
-            // Stockage (simulé)
             const storageRows = `
                 <tr>
-                    <td>Stockage local</td>
-                    <td><span id="storage-quota">N/A</span></td>
-                    <td><span id="storage-used">N/A</span></td>
-                    <td><span id="storage-free">N/A</span></td>
-                    <td><span id="storage-percent">N/A</span></td>
+                    <td>SSD NVMe</td>
+                    <td>500 GB</td>
+                    <td>220 GB</td>
+                    <td>280 GB</td>
+                    <td>44</td>
+                </tr>
+                <tr>
+                    <td>HDD 1TB</td>
+                    <td>1000 GB</td>
+                    <td>667 GB</td>
+                    <td>333 GB</td>
+                    <td>67</td>
                 </tr>
             `;
             document.getElementById('storage-table').innerHTML = storageRows;
 
-            // Réseau
             const networkRows = `
                 <tr>
-                    <td>Connexion</td>
-                    <td>${getIPAddress()}</td>
-                    <td>N/A</td>
-                    <td><span class="status-ok">✓ Actif</span></td>
+                    <td>Ethernet</td>
+                    <td>${localStorage.getItem('detectedIp') || 'N/A'}</td>
+                    <td>00:00:00:00:00:00</td>
+                    <td><span class="status-ok">Actif</span></td>
+                    <td>1000 Mbps</td>
+                </tr>
+                <tr>
+                    <td>Wi-Fi</td>
+                    <td>192.168.1.72</td>
+                    <td>00:00:00:00:00:01</td>
+                    <td><span class="status-ok">Actif</span></td>
+                    <td>300 Mbps</td>
                 </tr>
             `;
             document.getElementById('network-table').innerHTML = networkRows;
-        }
 
-        function getIPAddress() {
-            // Cette API nécessite un backend pour les informations réelles
-            return 'Disponible via backend';
+            const externalRows = `
+                <tr><td>Clavier</td><td>Logitech MX Keys</td><td><span class="status-ok">Connecté</span></td><td>USB</td></tr>
+                <tr><td>Souris</td><td>Logitech MX Master 3</td><td><span class="status-ok">Connecté</span></td><td>Bluetooth</td></tr>
+                <tr><td>Imprimante</td><td>HP LaserJet</td><td><span class="status-warning">Inactive</span></td><td>USB</td></tr>
+                <tr><td>Stockage USB</td><td>SanDisk 64GB</td><td><span class="status-ok">Connecté</span></td><td>USB 3.0</td></tr>
+            `;
+            document.getElementById('external-table').innerHTML = externalRows;
         }
 
         function initializeCharts() {
-            // CPU Chart
             const cpuCtx = document.getElementById('cpuChart').getContext('2d');
             state.charts.cpu = new Chart(cpuCtx, {
                 type: 'line',
@@ -655,16 +849,10 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true }
-                    },
-                    scales: {
-                        y: { min: 0, max: 100 }
-                    }
+                    scales: { y: { min: 0, max: 100 } }
                 }
             });
 
-            // RAM Chart
             const ramCtx = document.getElementById('ramChart').getContext('2d');
             state.charts.ram = new Chart(ramCtx, {
                 type: 'line',
@@ -684,73 +872,61 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true }
-                    },
-                    scales: {
-                        y: { min: 0, max: 100 }
-                    }
+                    scales: { y: { min: 0, max: 100 } }
                 }
             });
 
-            // Resource Chart (Pie)
             const resourceCtx = document.getElementById('resourceChart').getContext('2d');
             state.charts.resource = new Chart(resourceCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['CPU', 'RAM'],
+                    labels: ['CPU', 'RAM', 'Disque', 'GPU'],
                     datasets: [{
-                        data: [0, 0],
-                        backgroundColor: ['#667eea', '#764ba2'],
-                        borderColor: ['#667eea', '#764ba2'],
-                        borderWidth: 2
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#667eea', '#764ba2', '#00b894', '#fdcb6e']
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         }
 
         function startMonitoring() {
             setInterval(() => {
-                const cpuUsage = Math.random() * 60 + 20;
-                const ramUsage = Math.random() * 50 + 30;
-                const timestamp = new Date().toLocaleTimeString();
+                const cpuUsage = Math.round(Math.random() * 60 + 20);
+                const ramUsage = Math.round(Math.random() * 50 + 30);
+                const gpuTemp = Math.round(Math.random() * 30 + 40);
+                const storageUsage = Math.round(state.metrics.storageUsage || 55);
+                const time = new Date().toLocaleTimeString();
 
-                // Mise à jour gauges
-                document.getElementById('cpu-gauge').style.width = cpuUsage + '%';
-                document.getElementById('cpu-gauge').textContent = Math.round(cpuUsage) + '%';
-                document.getElementById('ram-gauge').style.width = ramUsage + '%';
-                document.getElementById('ram-gauge').textContent = Math.round(ramUsage) + '%';
+                state.metrics.cpu = cpuUsage;
+                state.metrics.ram = ramUsage;
+                state.metrics.gpuTemp = gpuTemp;
+                state.metrics.storageUsage = storageUsage;
 
-                // Historic
-                state.history.cpu.push(cpuUsage);
-                state.history.ram.push(ramUsage);
-                if (state.history.cpu.length > 20) {
-                    state.history.cpu.shift();
-                    state.history.ram.shift();
-                }
+                document.getElementById('cpu-gauge').style.width = `${cpuUsage}%`;
+                document.getElementById('cpu-gauge').textContent = `${cpuUsage}%`;
+                document.getElementById('ram-gauge').style.width = `${ramUsage}%`;
+                document.getElementById('ram-gauge').textContent = `${ramUsage}%`;
+                document.getElementById('temp-gauge').style.width = `${Math.min(100, (gpuTemp - 30) * 2)}%`;
+                document.getElementById('temp-gauge').textContent = `${gpuTemp}°C`;
 
-                // Mise à jour charts
-                updateChart(state.charts.cpu, timestamp, cpuUsage);
-                updateChart(state.charts.ram, timestamp, ramUsage);
-                
-                // Mise à jour pie chart
-                state.charts.resource.data.datasets[0].data = [cpuUsage, ramUsage];
-                state.charts.resource.update();
+                document.getElementById('cpu-usage').textContent = `${cpuUsage}%`;
+                document.getElementById('ram-usage').textContent = `${ramUsage}%`;
+                document.getElementById('gpu-temp').textContent = `${gpuTemp}°C`;
+                document.getElementById('ram-used').textContent = `${Math.round(ramUsage / 100 * 16)} GB`;
+                document.getElementById('ram-free').textContent = `${Math.round((100-ramUsage) / 100 * 16)} GB`;
 
-                // Mise à jour détails
-                document.getElementById('cpu-usage').textContent = Math.round(cpuUsage) + '%';
-                document.getElementById('ram-usage').textContent = Math.round(ramUsage) + '%';
+                addHistory(state.charts.cpu, time, cpuUsage);
+                addHistory(state.charts.ram, time, ramUsage);
+                updateResourceChart();
             }, 2000);
         }
 
-        function updateChart(chart, label, value) {
+        function addHistory(chart, label, value) {
             if (chart.data.labels.length > 20) {
                 chart.data.labels.shift();
                 chart.data.datasets[0].data.shift();
@@ -760,49 +936,87 @@
             chart.update('none');
         }
 
-        function switchTab(tabName) {
-            // Masquer tous les onglets
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+        function updateResourceChart() {
+            state.charts.resource.data.datasets[0].data = [
+                state.metrics.cpu,
+                state.metrics.ram,
+                state.metrics.storageUsage,
+                state.metrics.gpuTemp / 2
+            ];
+            state.charts.resource.update('none');
+        }
 
-            // Retirer class active des boutons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Afficher l'onglet sélectionné
+        function switchTab(event, tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        }
+
+        function sortTable(tableBodyId, colIndex, type) {
+            const tbody = document.getElementById(tableBodyId);
+            if (!tbody) return;
+            const rows = Array.from(tbody.rows);
+            const sorted = rows.sort((a, b) => {
+                const aText = a.cells[colIndex]?.innerText || '';
+                const bText = b.cells[colIndex]?.innerText || '';
+                if (type === 'number') {
+                    return parseFloat(aText) - parseFloat(bText);
+                }
+                return aText.localeCompare(bText, 'fr', { numeric: true });
+            });
+            tbody.innerHTML = '';
+            sorted.forEach(row => tbody.appendChild(row));
+        }
+
+        function filterTable(tableBodyId, query) {
+            query = query.toLowerCase();
+            const tbody = document.getElementById(tableBodyId);
+            if (!tbody) return;
+            Array.from(tbody.rows).forEach(row => {
+                const rowText = row.innerText.toLowerCase();
+                row.style.display = rowText.includes(query) ? '' : 'none';
+            });
         }
 
         function exportJSON() {
             const data = {
-                timestamp: new Date().toISOString(),
+                generatedAt: new Date().toISOString(),
+                permission: state.permission,
                 systemInfo: state.systemInfo,
+                metrics: state.metrics,
                 history: state.history
             };
-            downloadFile(JSON.stringify(data, null, 2), 'system-analysis.json', 'application/json');
+            downloadFile(JSON.stringify(data, null, 2), `rapport-systeme-${Date.now()}.json`, 'application/json');
         }
 
         function exportCSV() {
-            let csv = 'Propriété,Valeur\n';
-            Object.entries(state.systemInfo).forEach(([key, value]) => {
-                csv += `"${key}","${value}"\n`;
-            });
-            downloadFile(csv, 'system-analysis.csv', 'text/csv');
+            const rows = [];
+            Object.entries(state.systemInfo).forEach(([k, v]) => rows.push(`"${k}","${v}"`));
+            const csv = `Propriété,Valeur\n${rows.join('\n')}`;
+            downloadFile(csv, `rapport-systeme-${Date.now()}.csv`, 'text/csv');
+        }
+
+        function downloadReport() {
+            const report = {
+                title: 'Rapport de l\u00E9tat matériel',
+                date: new Date().toLocaleString(),
+                systemInfo: state.systemInfo,
+                metrics: state.metrics
+            };
+            downloadFile(JSON.stringify(report, null, 2), `rapport-complet-${Date.now()}.json`, 'application/json');
         }
 
         function downloadFile(content, filename, type) {
             const blob = new Blob([content], { type });
-            const url = window.URL.createObjectURL(blob);
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
