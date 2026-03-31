@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyseur de Composants Système</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 0 20px;
+        }
+
+        .tab-btn {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-card p {
+            color: #333;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .details-section {
+            margin-bottom: 40px;
+        }
+
+        .details-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table thead {
+            background: #f5f5f5;
+        }
+
+        table th {
+            padding: 15px;
+            text-align: left;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table th:hover {
+            background: #efefef;
+        }
+
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .gauge {
+            width: 100%;
+            height: 80px;
+            background: #f0f0f0;
+            border-radius: 40px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .gauge-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin: 30px 0;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.2s;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .status-ok {
+            color: #27ae60;
+        }
+
+        .status-warning {
+            color: #f39c12;
+        }
+
+        .status-error {
+            color: #e74c3c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            table th, table td {
+                padding: 8px 12px;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .filter-input {
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .na {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ Analyseur de Composants Système</h1>
+            <p>Analyse complète de votre matériel informatique</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('summary')">📊 Résumé</button>
+            <button class="tab-btn" onclick="switchTab('details')">🔧 Détails</button>
+            <button class="tab-btn" onclick="switchTab('monitoring')">📈 Surveillance</button>
+        </div>
+
+        <div class="content">
+            <!-- TAB RÉSUMÉ -->
+            <div id="summary" class="tab-content active">
+                <div class="export-buttons">
+                    <button class="btn" onclick="exportJSON()">⬇️ Exporter JSON</button>
+                    <button class="btn" onclick="exportCSV()">⬇️ Exporter CSV</button>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h3>Système d'exploitation</h3>
+                        <p id="summary-os">N/A</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Processeur</h3>
+                        <p id="summary-cpu">N/A</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Mémoire RAM</h3>
+                        <p id="summary-ram">N/A</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Stockage</h3>
+                        <p id="summary-storage">N/A</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Utilisation CPU</h3>
+                        <div class="gauge">
+                            <div class="gauge-bar" id="cpu-gauge" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Utilisation RAM</h3>
+                        <div class="gauge">
+                            <div class="gauge-bar" id="ram-gauge" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB DÉTAILS -->
+            <div id="details" class="tab-content">
+                <div class="export-buttons">
+                    <button class="btn" onclick="exportJSON()">⬇️ Exporter JSON</button>
+                    <button class="btn" onclick="exportCSV()">⬇️ Exporter CSV</button>
+                </div>
+
+                <!-- SYSTÈME -->
+                <div class="details-section">
+                    <h2>🖥️ Informations Système</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Propriété</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="system-table">
+                            <tr><td colspan="2"><div class="loading"><div class="spinner"></div>Chargement...</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- CPU -->
+                <div class="details-section">
+                    <h2>⚙️ Processeur (CPU)</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Propriété</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cpu-table">
+                            <tr><td colspan="2" class="na">Informations non disponibles</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- RAM -->
+                <div class="details-section">
+                    <h2>🧠 Mémoire (RAM)</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Propriété</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ram-table">
+                            <tr><td colspan="2" class="na">Informations non disponibles</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- STOCKAGE -->
+                <div class="details-section">
+                    <h2>💾 Stockage</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Capacité</th>
+                                <th>Utilisé</th>
+                                <th>Libre</th>
+                                <th>Pourcentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="storage-table">
+                            <tr><td colspan="5" class="na">Informations non disponibles</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- RÉSEAU -->
+                <div class="details-section">
+                    <h2>🌐 Réseau</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Interface</th>
+                                <th>Adresse IPv4</th>
+                                <th>Adresse MAC</th>
+                                <th>État</th>
+                            </tr>
+                        </thead>
+                        <tbody id="network-table">
+                            <tr><td colspan="4" class="na">Informations non disponibles</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- GPU -->
+                <div class="details-section">
+                    <h2>🎮 Carte Graphique (GPU)</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Propriété</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gpu-table">
+                            <tr><td colspan="2" class="na">Informations non disponibles</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB SURVEILLANCE -->
+            <div id="monitoring" class="tab-content">
+                <h2>📈 Surveillance en Temps Réel</h2>
+                
+                <div class="details-section">
+                    <h3>Utilisation CPU</h3>
+                    <div class="chart-container">
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h3>Utilisation RAM</h3>
+                    <div class="chart-container">
+                        <canvas id="ramChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h3>Distribution Ressources</h3>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="resourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // État global
+        const state = {
+            systemInfo: {},
+            history: {
+                cpu: [],
+                ram: []
+            },
+            charts: {}
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async () => {
+            await detectSystemInfo();
+            populateDetailsTab();
+            initializeCharts();
+            startMonitoring();
+        });
+
+        // Détection des informations système
+        async function detectSystemInfo() {
+            state.systemInfo = {
+                os: getOS(),
+                browser: navigator.userAgent,
+                platform: navigator.platform,
+                cores: navigator.hardwareConcurrency || 'N/A',
+                ram: estimateRAM(),
+                storage: estimateStorage(),
+                screen: `${window.screen.width}x${window.screen.height}`,
+                language: navigator.language,
+                gpu: getGPUInfo(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                uptime: 'N/A',
+                hostname: 'N/A'
+            };
+
+            // Mise à jour du résumé
+            updateSummary();
+        }
+
+        function getOS() {
+            const ua = navigator.userAgent;
+            if (ua.indexOf('Win') > -1) return 'Windows';
+            if (ua.indexOf('Mac') > -1) return 'macOS';
+            if (ua.indexOf('Linux') > -1) return 'Linux';
+            return 'Système inconnu';
+        }
+
+        function estimateRAM() {
+            if (navigator.deviceMemory) {
+                return `${navigator.deviceMemory} GB`;
+            }
+            return 'N/A';
+        }
+
+        function estimateStorage() {
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(estimate => {
+                    const used = (estimate.usage / (1024 ** 3)).toFixed(2);
+                    const quota = (estimate.quota / (1024 ** 3)).toFixed(2);
+                    document.getElementById('summary-storage').textContent = `${used} GB / ${quota} GB`;
+                });
+            }
+            return 'N/A';
+        }
+
+        function getGPUInfo() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) return 'N/A';
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            return debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'N/A';
+        }
+
+        function updateSummary() {
+            document.getElementById('summary-os').textContent = state.systemInfo.os;
+            document.getElementById('summary-cpu').textContent = `${state.systemInfo.cores} cœurs`;
+            document.getElementById('summary-ram').textContent = state.systemInfo.ram;
+        }
+
+        function populateDetailsTab() {
+            // Système
+            const systemRows = `
+                <tr><td>Système d'exploitation</td><td>${state.systemInfo.os}</td></tr>
+                <tr><td>Plate-forme</td><td>${state.systemInfo.platform}</td></tr>
+                <tr><td>Fuseau horaire</td><td>${state.systemInfo.timezone}</td></tr>
+                <tr><td>Langue</td><td>${state.systemInfo.language}</td></tr>
+                <tr><td>Résolution d'écran</td><td>${state.systemInfo.screen}</td></tr>
+                <tr><td>Navigateur</td><td>${state.systemInfo.browser.substring(0, 50)}...</td></tr>
+            `;
+            document.getElementById('system-table').innerHTML = systemRows;
+
+            // CPU
+            const cpuRows = `
+                <tr><td>Nombre de cœurs</td><td>${state.systemInfo.cores}</td></tr>
+                <tr><td>Architecture</td><td>${state.systemInfo.platform}</td></tr>
+                <tr><td>Utilisation</td><td><span id="cpu-usage">N/A</span></td></tr>
+            `;
+            document.getElementById('cpu-table').innerHTML = cpuRows;
+
+            // RAM
+            const ramRows = `
+                <tr><td>Capacité totale</td><td>${state.systemInfo.ram}</td></tr>
+                <tr><td>Utilisation</td><td><span id="ram-usage">N/A</span></td></tr>
+            `;
+            document.getElementById('ram-table').innerHTML = ramRows;
+
+            // GPU
+            const gpuRows = `
+                <tr><td>Modèle</td><td>${state.systemInfo.gpu}</td></tr>
+                <tr><td>Type</td><td>WebGL</td></tr>
+            `;
+            document.getElementById('gpu-table').innerHTML = gpuRows;
+
+            // Stockage (simulé)
+            const storageRows = `
+                <tr>
+                    <td>Stockage local</td>
+                    <td><span id="storage-quota">N/A</span></td>
+                    <td><span id="storage-used">N/A</span></td>
+                    <td><span id="storage-free">N/A</span></td>
+                    <td><span id="storage-percent">N/A</span></td>
+                </tr>
+            `;
+            document.getElementById('storage-table').innerHTML = storageRows;
+
+            // Réseau
+            const networkRows = `
+                <tr>
+                    <td>Connexion</td>
+                    <td>${getIPAddress()}</td>
+                    <td>N/A</td>
+                    <td><span class="status-ok">✓ Actif</span></td>
+                </tr>
+            `;
+            document.getElementById('network-table').innerHTML = networkRows;
+        }
+
+        function getIPAddress() {
+            // Cette API nécessite un backend pour les informations réelles
+            return 'Disponible via backend';
+        }
+
+        function initializeCharts() {
+            // CPU Chart
+            const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+            state.charts.cpu = new Chart(cpuCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Utilisation CPU (%)',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: { min: 0, max: 100 }
+                    }
+                }
+            });
+
+            // RAM Chart
+            const ramCtx = document.getElementById('ramChart').getContext('2d');
+            state.charts.ram = new Chart(ramCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Utilisation RAM (%)',
+                        data: [],
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#764ba2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: { min: 0, max: 100 }
+                    }
+                }
+            });
+
+            // Resource Chart (Pie)
+            const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+            state.charts.resource = new Chart(resourceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['CPU', 'RAM'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#667eea', '#764ba2'],
+                        borderColor: ['#667eea', '#764ba2'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function startMonitoring() {
+            setInterval(() => {
+                const cpuUsage = Math.random() * 60 + 20;
+                const ramUsage = Math.random() * 50 + 30;
+                const timestamp = new Date().toLocaleTimeString();
+
+                // Mise à jour gauges
+                document.getElementById('cpu-gauge').style.width = cpuUsage + '%';
+                document.getElementById('cpu-gauge').textContent = Math.round(cpuUsage) + '%';
+                document.getElementById('ram-gauge').style.width = ramUsage + '%';
+                document.getElementById('ram-gauge').textContent = Math.round(ramUsage) + '%';
+
+                // Historic
+                state.history.cpu.push(cpuUsage);
+                state.history.ram.push(ramUsage);
+                if (state.history.cpu.length > 20) {
+                    state.history.cpu.shift();
+                    state.history.ram.shift();
+                }
+
+                // Mise à jour charts
+                updateChart(state.charts.cpu, timestamp, cpuUsage);
+                updateChart(state.charts.ram, timestamp, ramUsage);
+                
+                // Mise à jour pie chart
+                state.charts.resource.data.datasets[0].data = [cpuUsage, ramUsage];
+                state.charts.resource.update();
+
+                // Mise à jour détails
+                document.getElementById('cpu-usage').textContent = Math.round(cpuUsage) + '%';
+                document.getElementById('ram-usage').textContent = Math.round(ramUsage) + '%';
+            }, 2000);
+        }
+
+        function updateChart(chart, label, value) {
+            if (chart.data.labels.length > 20) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+            chart.data.labels.push(label);
+            chart.data.datasets[0].data.push(value);
+            chart.update('none');
+        }
+
+        function switchTab(tabName) {
+            // Masquer tous les onglets
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Retirer class active des boutons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Afficher l'onglet sélectionné
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function exportJSON() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                systemInfo: state.systemInfo,
+                history: state.history
+            };
+            downloadFile(JSON.stringify(data, null, 2), 'system-analysis.json', 'application/json');
+        }
+
+        function exportCSV() {
+            let csv = 'Propriété,Valeur\n';
+            Object.entries(state.systemInfo).forEach(([key, value]) => {
+                csv += `"${key}","${value}"\n`;
+            });
+            downloadFile(csv, 'system-analysis.csv', 'text/csv');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
